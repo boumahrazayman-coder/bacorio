@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Moroccan Bac Orientation Test (RIASEC)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#f3f4f9;margin:0}
+.container{max-width:950px;margin:auto;padding:20px}
+.card{background:white;padding:30px;border-radius:14px;box-shadow:0 10px 25px rgba(0,0,0,0.08)}
+h1{margin-top:0}
+.option{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin:8px 0;cursor:pointer}
+.option:hover{background:#eef2ff}
+.selected{background:#dbeafe}
+button{background:#2563eb;color:white;border:none;padding:12px 20px;border-radius:8px;margin-top:15px;cursor:pointer}
+button:hover{background:#1d4ed8}
+.progress{height:10px;background:#e5e7eb;border-radius:10px;margin-bottom:20px}
+.bar{height:10px;background:#2563eb;border-radius:10px;width:0}
+.resultBox{background:#eef2ff;padding:15px;border-radius:10px;margin-top:12px}
+.school{font-size:14px;color:#334155}
+canvas{margin-top:20px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="card">
+<h1>Moroccan Bac Orientation Test</h1>
+<p>This orientation test analyzes your interests using a simplified <b>RIASEC psychometric model</b> used in career guidance worldwide.</p>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div id="question"></div>
+<div id="options"></div>
+<button id="nextBtn">Next</button>
+<div id="result"></div>
+<canvas id="chart" width="400" height="400"></canvas>
+</div>
+</div>
+
+<script>
+
+const questions=[
+{q:"Which activity would you enjoy most?",o:["Building machines","Doing lab experiments","Starting a business","Helping people learn"]},
+{q:"Which subject attracts you most?",o:["Physics","Biology","Economics","Literature"]},
+{q:"What type of project excites you?",o:["Designing technology","Scientific discovery","Managing a company","Writing stories"]},
+{q:"You prefer working",o:["With tools or systems","In laboratories","In organizations","With people"]},
+{q:"Which club would you join?",o:["Robotics","Science club","Entrepreneur club","Debate club"]},
+{q:"What motivates you most?",o:["Innovation","Discovery","Leadership","Helping others"]},
+{q:"Preferred work style",o:["Technical problem solving","Scientific analysis","Strategic planning","Communication"]},
+{q:"What environment inspires you?",o:["Engineering lab","Research center","Corporate office","School or NGO"]},
+{q:"Which skill do you value most?",o:["Logic","Scientific curiosity","Negotiation","Empathy"]},
+{q:"You enjoy",o:["Programming","Biology experiments","Market analysis","Teaching"]},
+{q:"Which documentary interests you?",o:["Technology","Nature","Business","Society"]},
+{q:"Your strongest ability",o:["Engineering thinking","Scientific thinking","Leadership","Communication"]},
+{q:"Your favorite challenge",o:["Building systems","Discovering knowledge","Growing companies","Helping communities"]},
+{q:"You prefer solving",o:["Technical problems","Scientific mysteries","Economic issues","Social problems"]},
+{q:"Which task sounds fun",o:["Building an app","Studying ecosystems","Creating a startup","Writing articles"]},
+{q:"You are usually",o:["Practical","Curious","Ambitious","Supportive"]},
+{q:"Your dream impact",o:["Innovate technology","Advance science","Create businesses","Improve society"]},
+{q:"You enjoy learning through",o:["Exercises","Experiments","Case studies","Discussion"]},
+{q:"Your preferred university",o:["Engineering school","Science faculty","Business school","Education faculty"]},
+{q:"Which topic fascinates you?",o:["AI and robotics","Human biology","Global economy","Psychology"]}
+];
+
+let index=0;
+let answers=[];
+
+const scores={R:0,I:0,E:0,S:0};
+
+function showQuestion(){
+const q=questions[index];
+document.getElementById("question").innerHTML=`<h3>${index+1}. ${q.q}</h3>`;
+const optDiv=document.getElementById("options");
+optDiv.innerHTML="";
+q.o.forEach((opt,i)=>{
+const d=document.createElement("div");
+d.className="option";
+d.innerText=opt;
+d.onclick=()=>select(i,d);
+optDiv.appendChild(d);
+});
+updateBar();
+}
+
+function select(i,el){
+answers[index]=i;
+document.querySelectorAll(".option").forEach(o=>o.classList.remove("selected"));
+el.classList.add("selected");
+}
+
+function updateBar(){
+const percent=(index/questions.length)*100;
+document.getElementById("bar").style.width=percent+"%";
+}
+
+function next(){
+if(answers[index]==null){alert("Please choose an answer");return}
+index++;
+if(index<questions.length)showQuestion();
+else calculate();
+}
+
+document.getElementById("nextBtn").onclick=next;
+
+function calculate(){
+answers.forEach(a=>{
+if(a===0)scores.R++;
+if(a===1)scores.I++;
+if(a===2)scores.E++;
+if(a===3)scores.S++;
+});
+
+const domains={
+R:{name:"Engineering & Technology",schools:["ENSA","EMI","INPT","ENSAM","FST Engineering"]},
+I:{name:"Scientific Research & Health Sciences",schools:["Faculty of Medicine","Pharmacy","Biology Faculties","Agronomy Institutes"]},
+E:{name:"Business, Economics & Management",schools:["ISCAE","ENCG","FSJES Economics","Private Business Schools"]},
+S:{name:"Education, Communication & Social Fields",schools:["ENS Teaching Schools","Language Faculties","Journalism Institutes"]}
+};
+
+let ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+
+let html="<h2>Your Orientation Results</h2>";
+
+for(let i=0;i<3;i++){
+let key=ranked[i][0];
+let d=domains[key];
+html+=`<div class='resultBox'><b>${i+1}. ${d.name}</b><br>
+<b>Examples of Moroccan studies:</b> ${d.schools.join(", ")}</div>`;
+}
+
+let insight="";
+
+if(scores.R>scores.E && scores.R>scores.I)
+insight="Your profile shows strong technical and analytical tendencies. Engineering, technology and applied sciences could suit you well.";
+else if(scores.I>scores.R)
+insight="You demonstrate strong scientific curiosity. Fields like medicine, biology and research may match your interests.";
+else if(scores.E>scores.R)
+insight="You show leadership and strategic thinking. Business, economics and management paths may fit you.";
+else
+insight="Your profile suggests strong interpersonal and communication skills suited for education, psychology or social sciences.";
+
+html+=`<h3>AI Insight</h3><p>${insight}</p>`;
+
+document.getElementById("question").innerHTML="";
+document.getElementById("options").innerHTML="";
+document.getElementById("nextBtn").style.display="none";
+document.getElementById("result").innerHTML=html;
+
+createChart();
+}
+
+function createChart(){
+const ctx=document.getElementById('chart');
+new Chart(ctx,{type:'radar',data:{labels:["Realistic (Engineering)","Investigative (Science)","Enterprising (Business)","Social (Education)"],datasets:[{label:"Your Profile",data:[scores.R,scores.I,scores.E,scores.S],fill:true}]},options:{scales:{r:{beginAtZero:true}}}});
+}
+
+showQuestion();
+
+</script>
+</body>
+</html>
