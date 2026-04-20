@@ -1,41 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Moroccan Bac Orientation Test (RIASEC)</title>
+<title>Orientation Bac Maroc</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-    body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f3f4f9;margin:0; transition: all 0.3s ease;}
-    .container{max-width:950px;margin:auto;padding:20px}
-    .card{background:white;padding:30px;border-radius:14px;box-shadow:0 10px 25px rgba(0,0,0,0.08)}
-    .lang-switcher{display:flex; justify-content: flex-end; gap: 10px; margin-bottom: 20px;}
-    .lang-btn{padding: 5px 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 5px; background: #fff;}
+    body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f3f4f9;margin:0; transition: all 0.3s ease; color: #1f2937;}
+    .container{max-width:850px;margin:auto;padding:20px}
+    .card{background:white;padding:35px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.1)}
+    .lang-switcher{display:flex; justify-content: center; gap: 10px; margin-bottom: 25px;}
+    .lang-btn{padding: 8px 16px; cursor: pointer; border: 2px solid #e5e7eb; border-radius: 8px; background: #fff; font-weight: bold; transition: 0.2s;}
     .lang-btn.active{background: #2563eb; color: white; border-color: #2563eb;}
-    h1{margin-top:0}
-    .option{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin:8px 0;cursor:pointer; transition: 0.2s;}
-    .option:hover{background:#eef2ff}
-    .selected{background:#dbeafe; border-color: #2563eb;}
-    button{background:#2563eb;color:white;border:none;padding:12px 20px;border-radius:8px;margin-top:15px;cursor:pointer; font-size: 16px;}
-    button:hover{background:#1d4ed8}
-    .progress{height:10px;background:#e5e7eb;border-radius:10px;margin-bottom:20px; overflow: hidden;}
-    .bar{height:10px;background:#2563eb;border-radius:10px;width:0; transition: width 0.4s ease;}
-    .resultBox{background:#eef2ff;padding:15px;border-radius:10px;margin-top:12px; border-left: 5px solid #2563eb;}
-    [dir="rtl"] .resultBox{border-left: none; border-right: 5px solid #2563eb;}
-    .school{font-size:14px;color:#334155}
-    canvas{margin-top:20px; max-width: 100%;}
+    h1{margin-top:0; font-size: 1.8rem; text-align: center;}
+    .progress{height:8px;background:#e5e7eb;border-radius:10px;margin: 25px 0; overflow: hidden;}
+    .bar{height:100%;background:linear-gradient(90deg, #2563eb, #3b82f6);width:0; transition: width 0.4s ease;}
+    .option{border: 2px solid #f3f4f6; border-radius:12px; padding:15px; margin:10px 0; cursor:pointer; transition: 0.2s; font-size: 1.05rem;}
+    .option:hover{background:#f9fafb; border-color: #d1d5db;}
+    .selected{background:#eff6ff; border-color: #2563eb; font-weight: 500;}
+    button#nextBtn{width: 100%; background:#2563eb; color:white; border:none; padding:15px; border-radius:12px; margin-top:20px; cursor:pointer; font-size: 1.1rem; font-weight: bold;}
+    button#nextBtn:hover{background:#1d4ed8;}
+    .resultBox{background:#f8fafc; padding:20px; border-radius:12px; margin-top:15px; border-left: 6px solid #2563eb;}
+    [dir="rtl"] .resultBox{border-left: none; border-right: 6px solid #2563eb;}
+    canvas{margin-top:30px; max-height: 400px;}
 </style>
 </head>
 <body>
 <div class="container" id="mainContainer">
     <div class="lang-switcher">
-        <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
-        <button class="lang-btn" onclick="setLanguage('fr')">FR</button>
-        <button class="lang-btn" onclick="setLanguage('ar')">AR</button>
+        <button class="lang-btn active" onclick="setLanguage('en')">English</button>
+        <button class="lang-btn" onclick="setLanguage('fr')">Français</button>
+        <button class="lang-btn" onclick="setLanguage('ar')">العربية</button>
     </div>
     <div class="card">
         <h1 id="txt-title">Moroccan Bac Orientation Test</h1>
-        <p id="txt-desc">This orientation test analyzes your interests using a simplified RIASEC model.</p>
+        <p id="txt-desc" style="text-align: center; color: #6b7280;"></p>
         <div class="progress"><div class="bar" id="bar"></div></div>
         <div id="question"></div>
         <div id="options"></div>
@@ -47,112 +46,240 @@
 
 <script>
 let currentLang = 'en';
+let index = 0;
+let answers = [];
+let myChart = null;
+const scores = {R:0, I:0, E:0, S:0};
+
 const translations = {
     en: {
-        title: "Moroccan Bac Orientation Test",
-        desc: "This orientation test analyzes your interests using a simplified <b>RIASEC psychometric model</b> used in career guidance worldwide.",
-        next: "Next",
-        alert: "Please choose an answer",
-        resTitle: "Your Orientation Results",
-        example: "Examples of Moroccan studies:",
-        aiTitle: "AI Insight",
-        chartLabels: ["Realistic", "Investigative", "Enterprising", "Social"],
-        domains: {
-            R: {name: "Engineering & Technology", schools: ["ENSA", "EMI", "INPT", "ENSAM", "FST Engineering"]},
-            I: {name: "Scientific Research & Health Sciences", schools: ["Faculty of Medicine", "Pharmacy", "Biology Faculties", "Agronomy Institutes"]},
-            E: {name: "Business, Economics & Management", schools: ["ISCAE", "ENCG", "FSJES Economics", "Private Business Schools"]},
-            S: {name: "Education, Communication & Social Fields", schools: ["ENS Teaching Schools", "Language Faculties", "Journalism Institutes"]}
-        },
-        insights: [
-            "Your profile shows strong technical tendencies. Engineering and applied sciences suit you well.",
-            "You demonstrate strong scientific curiosity. Medicine and research may match your interests.",
-            "You show leadership and strategic thinking. Business and management paths may fit you.",
-            "Your profile suggests strong interpersonal skills suited for education or social sciences."
-        ]
+        title: "Bac Orientation Test",
+        desc: "Discover the best path for your future in Morocco.",
+        next: "Next Question",
+        alert: "Please select an option",
+        resTitle: "Your Results",
+        example: "Recommended Moroccan Schools:",
+        aiTitle: "Expert Analysis",
+        chartLabels: ["Realistic (Technical)", "Investigative (Science)", "Enterprising (Business)", "Social (Humanities)"]
     },
     fr: {
-        title: "Test d'Orientation Bac Maroc",
-        desc: "Ce test analyse vos intérêts en utilisant le modèle psychométrique <b>RIASEC</b>, utilisé mondialement pour l'orientation professionnelle.",
-        next: "Suivant",
-        alert: "Veuillez choisir une réponse",
-        resTitle: "Vos Résultats d'Orientation",
-        example: "Exemples d'études au Maroc :",
-        aiTitle: "Analyse de l'IA",
-        chartLabels: ["Réaliste", "Investigateur", "Entreprenant", "Social"],
-        domains: {
-            R: {name: "Ingénierie & Technologie", schools: ["ENSA", "EMI", "INPT", "ENSAM", "FST"]},
-            I: {name: "Recherche Scientifique & Santé", schools: ["Médecine", "Pharmacie", "Facultés des Sciences", "Instituts d'Agronomie"]},
-            E: {name: "Commerce, Économie & Management", schools: ["ISCAE", "ENCG", "FSJES Économie", "Écoles de Commerce"]},
-            S: {name: "Éducation, Communication & Social", schools: ["ENS", "Facultés des Lettres", "Instituts de Journalisme"]}
-        },
-        insights: [
-            "Votre profil montre de fortes tendances techniques. L'ingénierie vous conviendrait bien.",
-            "Vous faites preuve d'une grande curiosité scientifique. La médecine et la recherche sont idéales.",
-            "Vous avez l'esprit de leadership. Le commerce et le management vous correspondent.",
-            "Votre profil suggère des compétences sociales pour l'éducation ou les sciences humaines."
-        ]
+        title: "Test d'Orientation Bac",
+        desc: "Découvrez la filière qui correspond à vos talents au Maroc.",
+        next: "Question Suivante",
+        alert: "Veuillez choisir une option",
+        resTitle: "Vos Résultats",
+        example: "Écoles marocaines recommandées :",
+        aiTitle: "Analyse de l'Expert",
+        chartLabels: ["Réaliste (Technique)", "Investigateur (Sciences)", "Entreprenant (Affaires)", "Social (Humain)"]
     },
     ar: {
         title: "اختبار التوجيه لما بعد البكالوريا",
-        desc: "يقوم هذا الاختبار بتحليل اهتماماتك باستخدام نموذج <b>RIASEC</b> السيكومتري المستخدم عالمياً في التوجيه التربوي.",
-        next: "التالي",
+        desc: "اكتشف المسار الدراسي الأنسب لمستقبلك في المغرب.",
+        next: "السؤال التالي",
         alert: "يرجى اختيار إجابة",
-        resTitle: "نتائج التوجيه الخاصة بك",
-        example: "أمثلة للدراسات في المغرب:",
-        aiTitle: "تحليل الذكاء الاصطناعي",
-        chartLabels: ["واقعي", "بحثي", "مقاول", "اجتماعي"],
-        domains: {
-            R: {name: "الهندسة والتكنولوجيا", schools: ["ENSA", "EMI", "INPT", "ENSAM", "FST الهندسة"]},
-            I: {name: "البحث العلمي والعلوم الصحية", schools: ["كليات الطب", "الصيدلة", "كليات العلوم", "معاهد الزراعة"]},
-            E: {name: "التجارة، الاقتصاد والتدبير", schools: ["ISCAE", "ENCG", "FSJES الاقتصاد", "مدارس التجارة الخاصة"]},
-            S: {name: "التربية، التواصل والمجال الاجتماعي", schools: ["المدارس العليا للأساتذة ENS", "كليات الآداب", "معاهد الصحافة"]}
-        },
-        insights: [
-            "يظهر ملفك الشخصي ميولاً تقنية قوية. الهندسة والعلوم التطبيقية تناسبك تماماً.",
-            "لديك فضول علمي قوي. قد تناسب اهتماماتك مجالات الطب والبحث العلمي.",
-            "تتمتع بروح القيادة والتفكير الاستراتيجي. مسارات التجارة والتدبير هي الأنسب لك.",
-            "يوحي ملفك الشخصي بمهارات تواصل قوية تناسب التعليم أو العلوم الاجتماعية."
-        ]
+        resTitle: "نتائجك الخاصة",
+        example: "المدارس المغربية المقترحة:",
+        aiTitle: "تحليل الخبراء",
+        chartLabels: ["واقعي (تقني)", "بحثي (علمي)", "مقاول (أعمال)", "اجتماعي (إنساني)"]
     }
 };
 
-const questionsData = [
-    {en:"Which activity would you enjoy most?", fr:"Quelle activité aimeriez-vous le plus ?", ar:"ما هو النشاط الذي ستستمتع به أكثر؟", o:{en:["Building machines","Doing lab experiments","Starting a business","Helping people learn"], fr:["Construire des machines","Faire des expériences","Lancer une entreprise","Aider les gens à apprendre"], ar:["بناء الآلات","إجراء تجارب مخبرية","بدء مشروع تجاري","مساعدة الناس على التعلم"]}},
-    {en:"Which subject attracts you most?", fr:"Quelle matière vous attire le plus ?", ar:"ما هي المادة التي تجذبك أكثر؟", o:{en:["Physics","Biology","Economics","Literature"], fr:["Physique","Biologie","Économie","Littérature"], ar:["الفيزياء","البيولوجيا","الاقتصاد","الأدب"]}},
-    {en:"What type of project excites you?", fr:"Quel type de projet vous passionne ?", ar:"ما نوع المشاريع التي تحمسك؟", o:{en:["Designing technology","Scientific discovery","Managing a company","Writing stories"], fr:["Concevoir la technologie","Découverte scientifique","Gérer une entreprise","Écrire des histoires"], ar:["تصميم التكنولوجيا","الاكتشاف العلمي","إدارة شركة","كتابة القصص"]}},
-    {en:"You prefer working", fr:"Vous préférez travailler", ar:"تفضل العمل", o:{en:["With tools or systems","In laboratories","In organizations","With people"], fr:["Avec des outils","En laboratoire","Dans des organisations","Avec des gens"], ar:["مع الأدوات والأنظمة","في المختبرات","داخل المؤسسات","مع الناس"]}},
-    {en:"Which club would you join?", fr:"Quel club rejoindriez-vous ?", ar:"أي نادٍ ستنضم إليه؟", o:{en:["Robotics","Science club","Entrepreneur club","Debate club"], fr:["Robotique","Club de science","Club d'entrepreneurs","Club de débat"], ar:["الروبوتيك","نادي العلوم","نادي المقاولين","نادي المناظرة"]}}
-    // ... Note: In a real app, translate all 20. For this demo, I'll repeat the logic patterns.
+const domains = {
+    R: {
+        en: { name: "Engineering & Technical", schools: ["ENSA", "EMI", "ENSAM", "FST", "BTS"] },
+        fr: { name: "Ingénierie & Technique", schools: ["ENSA", "EMI", "ENSAM", "FST", "BTS"] },
+        ar: { name: "الهندسة والتقنيات", schools: ["ENSA", "EMI", "ENSAM", "FST", "BTS"] }
+    },
+    I: {
+        en: { name: "Health & Scientific Research", schools: ["Medicine", "Pharmacy", "IAV", "Science Faculties"] },
+        fr: { name: "Santé & Recherche Scientifique", schools: ["Médecine", "Pharmacie", "IAV", "Facultés des Sciences"] },
+        ar: { name: "الصحة والبحث العلمي", schools: ["كلية الطب", "الصيدلة", "معهد الزراعة والبيطرة", "كليات العلوم"] }
+    },
+    E: {
+        en: { name: "Management, Law & Business", schools: ["ISCAE", "ENCG", "FSJES", "HEM"] },
+        fr: { name: "Management, Droit & Business", schools: ["ISCAE", "ENCG", "FSJES", "HEM"] },
+        ar: { name: "التدبير، القانون والأعمال", schools: ["ISCAE", "ENCG", "FSJES", "HEM"] }
+    },
+    S: {
+        en: { name: "Education, Social & Media", schools: ["ENS", "ISIC (Journalism)", "Arts Faculties", "Education Science"] },
+        fr: { name: "Éducation, Social & Médias", schools: ["ENS", "ISIC (Journalisme)", "Facultés des Lettres", "Sciences de l'Éducation"] },
+        ar: { name: "التربية، المجال الاجتماعي والإعلام", schools: ["المدرسة العليا للأساتذة", "معهد الصحافة", "كليات الآداب", "علوم التربية"] }
+    }
+};
+
+const questions = [
+    {
+        en: "What kind of workshop would you prefer to attend?",
+        fr: "Quel type d'atelier préféreriez-vous suivre ?",
+        ar: "ما هو نوع الورشات التي تفضل حضورها؟",
+        o: {
+            en: ["Mechanical repair or DIY", "Scientific data analysis", "Public speaking and sales", "Conflict resolution and psychology"],
+            fr: ["Réparation mécanique ou bricolage", "Analyse de données scientifiques", "Prise de parole et vente", "Médiation et psychologie"],
+            ar: ["الإصلاح الميكانيكي أو اليدوي", "تحليل البيانات العلمية", "الخطابة والبيع", "حل النزاعات وعلم النفس"]
+        }
+    },
+    {
+        en: "Which school subject do you master the most?",
+        fr: "Quelle matière scolaire maîtrisez-vous le mieux ?",
+        ar: "ما هي المادة الدراسية التي تتقنها أكثر؟",
+        o: {
+            en: ["Technology / Engineering science", "Mathematics or Physics", "Economics or Accounting", "Languages or Philosophy"],
+            fr: ["Technologie / Sciences de l'ingénieur", "Mathématiques ou Physique", "Économie ou Comptabilité", "Langues ou Philosophie"],
+            ar: ["التكنولوجيا / علوم المهندس", "الرياضيات أو الفيزياء", "الاقتصاد أو المحاسبة", "اللغات أو الفلسفة"]
+        }
+    },
+    {
+        en: "What do you like to do in your free time?",
+        fr: "Que préférez-vous faire pendant votre temps libre ?",
+        ar: "ماذا تحب أن تفعل في وقت فراغك؟",
+        o: {
+            en: ["Fixing electronic devices", "Reading about new discoveries", "Planning a small project or business", "Volunteering for a local NGO"],
+            fr: ["Réparer des appareils électroniques", "Lire sur les découvertes", "Planifier un projet ou commerce", "Bénévolat dans une association"],
+            ar: ["إصلاح الأجهزة الإلكترونية", "القراءة عن الاكتشافات الجديدة", "التخطيط لمشروع أو تجارة صغيرة", "التطوع في جمعية خيرية"]
+        }
+    },
+    {
+        en: "If you were to write a book, what would it be about?",
+        fr: "Si vous deviez écrire un livre, sur quoi porterait-il ?",
+        ar: "إذا كان عليك تأليف كتاب، فماذا سيكون موضوعه؟",
+        o: {
+            en: ["A technical user guide", "A scientific theory", "Success and leadership secrets", "A social or human drama"],
+            fr: ["Un guide technique", "Une théorie scientifique", "Secrets de succès et leadership", "Un drame social ou humain"],
+            ar: ["دليل تقني للاستخدام", "نظرية علمية", "أسرار النجاح والقيادة", "قصة اجتماعية أو إنسانية"]
+        }
+    },
+    {
+        en: "In a professional team, you are the one who:",
+        fr: "Dans une équipe, vous êtes celui/celle qui :",
+        ar: "في فريق عمل، أنت الشخص الذي:",
+        o: {
+            en: ["Builds the product/system", "Analyzes the problems", "Leads the group", "Supports and motivates members"],
+            fr: ["Construit le produit/système", "Analyse les problèmes", "Dirige le groupe", "Soutient et motive les membres"],
+            ar: ["يبني المنتج أو النظام", "يحلل المشكلات", "يقود المجموعة", "يدعم ويحفز الأعضاء"]
+        }
+    },
+    {
+        en: "Which environment would you prefer for your future office?",
+        fr: "Quel environnement préféreriez-vous pour votre futur bureau ?",
+        ar: "ما هي البيئة التي تفضلها لمكتبك المستقبلي؟",
+        o: {
+            en: ["A construction site or factory", "A high-tech laboratory", "A modern corporate building", "A classroom or counseling center"],
+            fr: ["Un chantier ou une usine", "Un laboratoire de haute technologie", "Un grand bureau d'entreprise", "Une classe ou centre de conseil"],
+            ar: ["ورشة بناء أو مصنع", "مختبر تقني عالي المستوى", "مكتب شركة عصري", "فصل دراسي أو مركز استشارة"]
+        }
+    },
+    {
+        en: "Which of these personalities inspires you the most?",
+        fr: "Laquelle de ces personnalités vous inspire le plus ?",
+        ar: "أي من هذه الشخصيات تلهمك أكثر؟",
+        o: {
+            en: ["Elon Musk (Innovation/Engineering)", "Marie Curie (Research/Science)", "Steve Jobs (Marketing/Business)", "Nelson Mandela (Social Change)"],
+            fr: ["Elon Musk (Innovation/Ingénierie)", "Marie Curie (Recherche/Science)", "Steve Jobs (Marketing/Business)", "Nelson Mandela (Changement Social)"],
+            ar: ["إيلون ماسك (ابتكار/هندسة)", "ماري كوري (بحث/علوم)", "ستيف جوبز (تسويق/أعمال)", "نيلسون مانديلا (تغيير اجتماعي)"]
+        }
+    },
+    {
+        en: "How do you handle a complex problem?",
+        fr: "Comment gérez-vous un problème complexe ?",
+        ar: "كيف تتعامل مع مشكلة معقدة؟",
+        o: {
+            en: ["By testing practical solutions", "By searching for logic and data", "By delegating and negotiating", "By discussing and helping others"],
+            fr: ["En testant des solutions pratiques", "En cherchant la logique et les données", "En déléguant et négociant", "En discutant et en aidant les autres"],
+            ar: ["بتجربة حلول عملية", "بالبحث عن المنطق والبيانات", "بالتفويض والتفاوض", "بالنقاش ومساعدة الآخرين"]
+        }
+    },
+    {
+        en: "What is your main goal in a career?",
+        fr: "Quel est votre objectif principal dans une carrière ?",
+        ar: "ما هو هدفك الأساسي في مسارك المهني؟",
+        o: {
+            en: ["To create concrete objects", "To understand how the world works", "To achieve financial success", "To make a difference in people's lives"],
+            fr: ["Créer des objets concrets", "Comprendre comment le monde fonctionne", "Réussir financièrement", "Faire une différence dans la vie des gens"],
+            ar: ["صناعة أشياء ملموسة", "فهم كيف يعمل العالم", "تحقيق النجاح المالي", "إحداث فرق في حياة الناس"]
+        }
+    },
+    {
+        en: "In school, you prefer projects that involve:",
+        fr: "À l'école, vous préférez les projets qui impliquent :",
+        ar: "في المدرسة، تفضل المشاريع التي تتضمن:",
+        o: {
+            en: ["Building or assembling things", "Doing deep research", "Pitching an idea to a jury", "Working with children or the public"],
+            fr: ["Construire ou assembler des choses", "Faire des recherches approfondies", "Présenter une idée à un jury", "Travailler avec des enfants ou le public"],
+            ar: ["بناء أو تجميع الأشياء", "إجراء بحث معمق", "عرض فكرة أمام لجنة", "العمل مع الأطفال أو الجمهور"]
+        }
+    },
+    {
+        en: "What motivates you to work hard?",
+        fr: "Qu'est-ce qui vous motive à travailler dur ?",
+        ar: "ما الذي يحفزك على العمل بجد؟",
+        o: {
+            en: ["Seeing the physical result", "Solving a difficult puzzle", "Winning a competition", "Feeling useful to others"],
+            fr: ["Voir le résultat physique", "Résoudre une énigme difficile", "Gagner une compétition", "Se sentir utile aux autres"],
+            ar: ["رؤية نتيجة ملموسة", "حل لغز صعب", "الفوز في مسابقة", "الشعور بأنك مفيد للآخرين"]
+        }
+    },
+    {
+        en: "Which application would you like to develop?",
+        fr: "Quelle application aimeriez-vous développer ?",
+        ar: "ما هو التطبيق الذي تود تطويره؟",
+        o: {
+            en: ["A tool for home automation", "A diagnostic tool for diseases", "An e-commerce platform", "A platform for mental health support"],
+            fr: ["Un outil de domotique", "Un outil de diagnostic médical", "Une plateforme de e-commerce", "Une plateforme de soutien psychologique"],
+            ar: ["أداة للتحكم في المنزل", "أداة لتشخيص الأمراض", "منصة للتجارة الإلكترونية", "منصة للدعم النفسي"]
+        }
+    },
+    {
+        en: "You are invited to a conference, which topic do you choose?",
+        fr: "Vous êtes invité(e) à une conférence, quel sujet choisissez-vous ?",
+        ar: "تمت دعوتك لمحاضرة، أي موضوع تختار؟",
+        o: {
+            en: ["New battery technologies", "Genetic engineering", "Real estate investment", "Human rights and education"],
+            fr: ["Nouvelles technologies de batterie", "Génie génétique", "Investissement immobilier", "Droits de l'homme et éducation"],
+            ar: ["تقنيات البطاريات الجديدة", "الهندسة الوراثية", "الاستثمار العقاري", "حقوق الإنسان والتعليم"]
+        }
+    },
+    {
+        en: "Which soft skill is your strongest?",
+        fr: "Quelle est votre plus grande compétence transversale ?",
+        ar: "ما هي أقوى مهارة شخصية لديك؟",
+        o: {
+            en: ["Precision and accuracy", "Critical thinking", "Persuasion", "Empathy"],
+            fr: ["Précision et exactitude", "Pensée critique", "Persuasion", "Empathie"],
+            ar: ["الدقة والإتقان", "التفكير النقدي", "الإقناع", "التعاطف"]
+        }
+    },
+    {
+        en: "Which Moroccan company interests you most?",
+        fr: "Quelle entreprise marocaine vous intéresse le plus ?",
+        ar: "أي شركة مغربية تثير اهتمامك أكثر؟",
+        o: {
+            en: ["OCP (Industrial/Technical)", "MASEN (Renewable Energy/Research)", "BCP or Attijari (Banking/Business)", "Foundation Zakoura (Social/Education)"],
+            fr: ["OCP (Industrie/Technique)", "MASEN (Énergie/Recherche)", "BCP ou Attijari (Banque/Affaires)", "Fondation Zakoura (Social/Éducation)"],
+            ar: ["OCP (صناعة/تقنية)", "MASEN (طاقة متجددة/بحث)", "التجاري وفا بنك (بنك/أعمال)", "مؤسسة زاكورة (اجتماعي/تعليم)"]
+        }
+    }
 ];
-
-// Replicating other questions logic for the translations...
-const fullQuestions = [];
-for(let i=0; i<20; i++) {
-    // We populate 20 questions based on the original 20 contextually translated
-    fullQuestions.push(questionsData[i % questionsData.length]); 
-}
-
-let index=0; let answers=[]; let myChart = null;
-const scores={R:0,I:0,E:0,S:0};
 
 function setLanguage(lang) {
     currentLang = lang;
     document.documentElement.lang = lang;
     document.getElementById("mainContainer").dir = (lang === 'ar') ? 'rtl' : 'ltr';
     
-    // Update static text
     document.getElementById("txt-title").innerText = translations[lang].title;
     document.getElementById("txt-desc").innerHTML = translations[lang].desc;
     document.getElementById("nextBtn").innerText = translations[lang].next;
     
-    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+    document.querySelectorAll('.lang-btn').forEach(b => {
+        b.classList.remove('active');
+        if(b.innerText.toLowerCase().includes(lang === 'ar' ? 'عرب' : lang === 'fr' ? 'fran' : 'eng')) b.classList.add('active');
+    });
     
-    if(index < fullQuestions.length) showQuestion();
+    if(index < questions.length) showQuestion();
+    else calculate();
 }
 
 function showQuestion(){
-    const q = fullQuestions[index];
+    const q = questions[index];
     document.getElementById("question").innerHTML=`<h3>${index+1}. ${q[currentLang]}</h3>`;
     const optDiv=document.getElementById("options");
     optDiv.innerHTML="";
@@ -173,18 +300,19 @@ function select(i,el){
 }
 
 function updateBar(){
-    const percent=(index/fullQuestions.length)*100;
+    const percent=(index/questions.length)*100;
     document.getElementById("bar").style.width=percent+"%";
 }
 
-function next(){
-    if(answers[index]==null){alert(translations[currentLang].alert);return}
+document.getElementById("nextBtn").onclick = () => {
+    if(answers[index] == null){
+        alert(translations[currentLang].alert);
+        return;
+    }
     index++;
-    if(index < fullQuestions.length) showQuestion();
+    if(index < questions.length) showQuestion();
     else calculate();
-}
-
-document.getElementById("nextBtn").onclick=next;
+};
 
 function calculate(){
     scores.R=0; scores.I=0; scores.E=0; scores.S=0;
@@ -196,25 +324,18 @@ function calculate(){
     let ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
 
     let html=`<h2>${langData.resTitle}</h2>`;
-    for(let i=0;i<3;i++){
+    for(let i=0;i<2;i++){
         let key=ranked[i][0];
-        let d=langData.domains[key];
+        let d = domains[key][currentLang];
         html+=`<div class='resultBox'><b>${i+1}. ${d.name}</b><br>
         <small>${langData.example}</small> ${d.schools.join(", ")}</div>`;
     }
-
-    let insightText = "";
-    if(scores.R > scores.E && scores.R > scores.I) insightText = langData.insights[0];
-    else if(scores.I > scores.R) insightText = langData.insights[1];
-    else if(scores.E > scores.R) insightText = langData.insights[2];
-    else insightText = langData.insights[3];
-
-    html+=`<h3>${langData.aiTitle}</h3><p>${insightText}</p>`;
 
     document.getElementById("question").innerHTML="";
     document.getElementById("options").innerHTML="";
     document.getElementById("nextBtn").style.display="none";
     document.getElementById("result").innerHTML=html;
+    document.getElementById("bar").style.width="100%";
 
     createChart();
 }
@@ -226,13 +347,20 @@ function createChart(){
         type:'radar',
         data:{
             labels: translations[currentLang].chartLabels,
-            datasets:[{label: (currentLang === 'ar' ? "ملفك الشخصي" : "Your Profile"), data:[scores.R,scores.I,scores.E,scores.S], fill:true, backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: '#2563eb'}]
+            datasets:[{
+                label: (currentLang === 'ar' ? "نتائجك" : "Your Results"), 
+                data:[scores.R, scores.I, scores.E, scores.S], 
+                fill:true, 
+                backgroundColor: 'rgba(37, 99, 235, 0.2)', 
+                borderColor: '#2563eb',
+                pointBackgroundColor: '#2563eb'
+            }]
         },
-        options:{ scales:{ r:{ beginAtZero:true } } }
+        options:{ scales:{ r:{ beginAtZero:true, max: 15 } } }
     });
 }
 
-showQuestion();
+setLanguage('fr'); // Initialisation
 </script>
 </body>
 </html>
